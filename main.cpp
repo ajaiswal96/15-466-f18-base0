@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
 	//Initialize SDL library:
 	SDL_Init(SDL_INIT_VIDEO);
 
+	//This sets properties for the OpenGL window
 	//Ask for an OpenGL context version 3.3, core profile, enable debug:
 	SDL_GL_ResetAttributes();
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
@@ -97,8 +98,8 @@ int main(int argc, char **argv) {
 	//the window created above is resizable; this inline function will be
 	//called whenever the window is resized, and will update the window_size
 	//and drawable_size variables:
-	glm::uvec2 window_size; //size of window (layout pixels)
-	glm::uvec2 drawable_size; //size of drawable (physical pixels)
+	glm::uvec2 window_size; //size of window (layout pixels) --> These are points
+	glm::uvec2 drawable_size; //size of drawable (physical pixels) --> These are pixels
 	//On non-highDPI displays, window_size will always equal drawable_size.
 	auto on_resize = [&](){
 		int w,h;
