@@ -65,6 +65,10 @@ struct Game {
 	Mesh cube_mesh;
 	Mesh darkpiece_mesh;
 	Mesh lightpiece_mesh;
+	Mesh selectedtile_mesh;
+
+	void merge_row(std::vector<Mesh const *> board_meshes, int row);
+	void merge_col(std::vector<Mesh const *> board_meshes, int col);
 
 	bool vertical_direction;
 

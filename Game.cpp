@@ -183,6 +183,7 @@ Game::Game() {
 		cube_mesh = lookup("Cube");
 		darkpiece_mesh = lookup("DarkPiece");
 		lightpiece_mesh = lookup("LightPiece");
+		selectedtile_mesh = lookup("SelectedTile");
 	}
 
 	{ //create vertex array object to hold the map from the mesh vertex buffer to shader program attributes:
@@ -257,27 +258,27 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 	//move cursor on L/R/U/D press:
 	if (evt.type == SDL_KEYDOWN && evt.key.repeat == 0) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_LEFT) {
+			vertical_direction = true;
 			if (cursor.x > 0) {
 				cursor.x -= 1;
-				vertical_direction = true;
 			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
+			vertical_direction = true;
 			if (cursor.x + 1 < board_size.x) {
 				cursor.x += 1;
-				vertical_direction = true;
 			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_UP) {
+			vertical_direction = false;
 			if (cursor.y + 1 < board_size.y) {
 				cursor.y += 1;
-				vertical_direction = false;
 			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_DOWN) {
+			vertical_direction = false;
 			if (cursor.y > 0) {
 				cursor.y -= 1;
-				vertical_direction = false;
 			}
 			return true;
 		}
@@ -287,9 +288,11 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_SPACE) {
 			if (vertical_direction) {
 				std::cout << "vertical direction is selected" << "\n";
+				merge_col(board_meshes, cursor.x);
 			}
 			else {
 				std::cout << "horizontal direction is selected" << "\n";
+				merge_row(board_meshes, cursor.y);
 			}
 			return true;
 		}
@@ -390,15 +393,41 @@ void Game::draw(glm::uvec2 drawable_size) {
 					x+0.5f, y+0.5f,-0.5f, 1.0f
 				)
 			);
-			draw_mesh(*board_meshes[y*board_size.x+x],
-				glm::mat4(
-					1.0f, 0.0f, 0.0f, 0.0f,
-					0.0f, 1.0f, 0.0f, 0.0f,
-					0.0f, 0.0f, 1.0f, 0.0f,
-					x+0.5f, y+0.5f, 0.0f, 1.0f
-				)
-				* glm::mat4_cast(board_rotations[y*board_size.x+x])
-			);
+			if (vertical_direction) {
+				draw_mesh(selectedtile_mesh,
+					glm::mat4(
+						1.0f, 0.0f, 0.0f, 0.0f,
+						0.0f, 1.0f, 0.0f, 0.0f,
+						0.0f, 0.0f, 1.0f, 0.0f,
+						cursor.x+0.5f, y+0.5f, 0.0f, 1.0f
+					)
+				);
+			}
+			else {
+				draw_mesh(selectedtile_mesh,
+					glm::mat4(
+						1.0f, 0.0f, 0.0f, 0.0f,
+						0.0f, 1.0f, 0.0f, 0.0f,
+						0.0f, 0.0f, 1.0f, 0.0f,
+						x+0.5f, cursor.y+0.5f, 0.0f, 1.0f
+					)
+				);
+			}
+
+			Mesh gamepiece_to_draw = *board_meshes[y*board_size.x+x];
+			if(gamepiece_to_draw.count>0) {
+				draw_mesh(gamepiece_to_draw,
+					glm::mat4(
+						1.0f, 0.0f, 0.0f, 0.0f,
+						0.0f, 1.0f, 0.0f, 0.0f,
+						0.0f, 0.0f, 1.0f, 0.0f,
+						x+0.5f, y+0.5f, 0.0f, 1.0f
+					)
+					* glm::mat4_cast(board_rotations[y*board_size.x+x])
+				);
+			}
+
+
 		}
 	}
 	draw_mesh(cursor_mesh,
@@ -416,6 +445,15 @@ void Game::draw(glm::uvec2 drawable_size) {
 	GL_ERRORS();
 }
 
+
+void Game::merge_row(std::vector<Mesh const *> board_meshes, int row){
+	std::cout<<"merging row "<<row<<"\n";
+}
+
+void Game::merge_col(std::vector<Mesh const *> board_meshes, int col){
+	std::cout<<"merging col "<< col<<"\n";
+
+}
 
 
 //create and return an OpenGL vertex shader from source:
