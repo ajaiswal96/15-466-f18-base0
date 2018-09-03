@@ -63,6 +63,9 @@ Game::Game() {
 			"}\n"
 		);
 
+		//set the selected direction to be vertical by default
+		vertical_direction = true;
+
 		simple_shading.program = glCreateProgram();
 		glAttachShader(simple_shading.program, vertex_shader);
 		glAttachShader(simple_shading.program, fragment_shader);
@@ -178,6 +181,8 @@ Game::Game() {
 		doll_mesh = lookup("Doll");
 		egg_mesh = lookup("Egg");
 		cube_mesh = lookup("Cube");
+		darkpiece_mesh = lookup("DarkPiece");
+		lightpiece_mesh = lookup("LightPiece");
 	}
 
 	{ //create vertex array object to hold the map from the mesh vertex buffer to shader program attributes:
@@ -206,7 +211,8 @@ Game::Game() {
 	board_rotations.reserve(board_size.x * board_size.y);
 	std::mt19937 mt(0xbead1234);
 
-	std::vector< Mesh const * > meshes{ &doll_mesh, &egg_mesh, &cube_mesh };
+	// std::vector< Mesh const * > meshes{ &doll_mesh, &egg_mesh, &cube_mesh, &darkpiece_mesh, &lightpiece_mesh};
+	std::vector< Mesh const * > meshes{&darkpiece_mesh, &lightpiece_mesh};
 
 	for (uint32_t i = 0; i < board_size.x * board_size.y; ++i) {
 		board_meshes.emplace_back(meshes[mt()%meshes.size()]);
@@ -253,21 +259,37 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_LEFT) {
 			if (cursor.x > 0) {
 				cursor.x -= 1;
+				vertical_direction = true;
 			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_RIGHT) {
 			if (cursor.x + 1 < board_size.x) {
 				cursor.x += 1;
+				vertical_direction = true;
 			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_UP) {
 			if (cursor.y + 1 < board_size.y) {
 				cursor.y += 1;
+				vertical_direction = false;
 			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_DOWN) {
 			if (cursor.y > 0) {
 				cursor.y -= 1;
+				vertical_direction = false;
+			}
+			return true;
+		}
+	}
+
+	if (evt.type == SDL_KEYDOWN && evt.key.repeat == 0) {
+		if (evt.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+			if (vertical_direction) {
+				std::cout << "vertical direction is selected" << "\n";
+			}
+			else {
+				std::cout << "horizontal direction is selected" << "\n";
 			}
 			return true;
 		}

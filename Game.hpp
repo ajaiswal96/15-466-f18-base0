@@ -63,6 +63,10 @@ struct Game {
 	Mesh doll_mesh;
 	Mesh egg_mesh;
 	Mesh cube_mesh;
+	Mesh darkpiece_mesh;
+	Mesh lightpiece_mesh;
+
+	bool vertical_direction;
 
 	GLuint meshes_for_simple_shading_vao = -1U; //vertex array object that describes how to connect the meshes_vbo to the simple_shading_program
 
