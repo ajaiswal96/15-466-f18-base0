@@ -99,7 +99,14 @@ for name in to_write:
 				data += struct.pack('f', x)
 			#TODO: set 'col' based on object's active vertex colors array.
 			# you should be able to use code much like the texcoord code below.
-			col = mathutils.Color((1.0, 1.0, 1.0))
+			#			print("trying to find colors")
+			vertex_colors = obj.data.vertex_colors
+			if vertex_colors is not None:
+				vertex_color = vertex_colors[poly.loop_indices[i]].color
+				col = mathutils.Color((vertex_color.r, vertex_color.g, vertex_color.b))
+			else:
+				col = mathutils.Color((1.0, 1.0, 1.0))
+
 			data += struct.pack('BBBB', int(col.r * 255), int(col.g * 255), int(col.b * 255), 255)
 
 			if do_texcoord:
