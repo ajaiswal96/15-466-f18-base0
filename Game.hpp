@@ -68,7 +68,7 @@ struct Game {
 
 	//------- game state -------
 
-	glm::uvec2 board_size = glm::uvec2(5,4);
+	glm::uvec2 board_size = glm::uvec2(4,4);
 	std::vector< Mesh const * > board_meshes;
 	std::vector< glm::quat > board_rotations;
 
