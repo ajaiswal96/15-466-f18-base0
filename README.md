@@ -25,7 +25,8 @@ Good Code: I felt the code that involved merging was done fairly well. The way t
 -Once a row/column is selected use 'a'/'d' to merge balls left or right in a row and 'w'/'s' to merge balls up or down in a column
 -Merging occurs similar to 2048. For example if a right merge occurs, all elements matching and adjacent to the element at the right edge of that row will be removed. After that all elements will be shifted to the right to fill up the space. If nothing can be merged, then all elements shift right to fill any gaps in that row. This process is the same for all directions of merges.
 -The game ends when no balls can be merged with each other.
--The goal of the game is to make the fewest merges as possible.
+-The goal of the game is to make the fewest merges as possible (have the lowest score).
+-Your score increases by 1 for each merge you ATTEMPT.
 -The best score remains for a level, and you can retry a level by pressing 'r'
 -You can select a new level to play by pressing 'space', though this will reset your best score
 
