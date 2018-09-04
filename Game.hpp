@@ -28,6 +28,8 @@ struct Game {
 	//draw is called after update:
 	void draw(glm::uvec2 drawable_size);
 
+	void reset();
+
 	//------- opengl resources -------
 
 	//shader program that draws lit objects with vertex colors:
@@ -67,8 +69,8 @@ struct Game {
 	Mesh lightpiece_mesh;
 	Mesh selectedtile_mesh;
 
-	void merge_row(std::vector<Mesh const *> board_meshes, int row);
-	void merge_col(std::vector<Mesh const *> board_meshes, int col);
+	void merge_row_right(int row);
+	void merge_col_down(int col);
 
 	bool vertical_direction;
 

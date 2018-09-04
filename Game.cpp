@@ -205,20 +205,9 @@ Game::Game() {
 	}
 
 	GL_ERRORS();
-
-	//----------------
-	//set up game board with meshes and rolls:
 	board_meshes.reserve(board_size.x * board_size.y);
 	board_rotations.reserve(board_size.x * board_size.y);
-	std::mt19937 mt(0xbead1234);
-
-	// std::vector< Mesh const * > meshes{ &doll_mesh, &egg_mesh, &cube_mesh, &darkpiece_mesh, &lightpiece_mesh};
-	std::vector< Mesh const * > meshes{&darkpiece_mesh, &lightpiece_mesh};
-
-	for (uint32_t i = 0; i < board_size.x * board_size.y; ++i) {
-		board_meshes.emplace_back(meshes[mt()%meshes.size()]);
-		board_rotations.emplace_back(glm::quat());
-	}
+	reset();
 }
 
 Game::~Game() {
@@ -252,6 +241,11 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_D) {
 			controls.roll_right = (evt.type == SDL_KEYDOWN);
+			return true;
+		} else if (evt.key.keysym.scancode == SDL_SCANCODE_R) {
+			if (evt.type == SDL_KEYDOWN){
+				reset();	
+			}
 			return true;
 		}
 	}
@@ -288,11 +282,11 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_SPACE) {
 			if (vertical_direction) {
 				std::cout << "vertical direction is selected" << "\n";
-				merge_col(board_meshes, cursor.x);
+				merge_col_down(cursor.x);
 			}
 			else {
 				std::cout << "horizontal direction is selected" << "\n";
-				merge_row(board_meshes, cursor.y);
+				merge_row_right(cursor.y);
 			}
 			return true;
 		}
@@ -414,9 +408,9 @@ void Game::draw(glm::uvec2 drawable_size) {
 				);
 			}
 
-			Mesh gamepiece_to_draw = *board_meshes[y*board_size.x+x];
-			if(gamepiece_to_draw.count>0) {
-				draw_mesh(gamepiece_to_draw,
+			const Mesh* gamepiece_to_draw = board_meshes[y*board_size.x+x];
+			if(gamepiece_to_draw) {
+				draw_mesh(*gamepiece_to_draw,
 					glm::mat4(
 						1.0f, 0.0f, 0.0f, 0.0f,
 						0.0f, 1.0f, 0.0f, 0.0f,
@@ -430,14 +424,14 @@ void Game::draw(glm::uvec2 drawable_size) {
 
 		}
 	}
-	draw_mesh(cursor_mesh,
-		glm::mat4(
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 0.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			cursor.x+0.5f, cursor.y+0.5f, 0.0f, 1.0f
-		)
-	);
+	// draw_mesh(cursor_mesh,
+	// 	glm::mat4(
+	// 		1.0f, 0.0f, 0.0f, 0.0f,
+	// 		0.0f, 1.0f, 0.0f, 0.0f,
+	// 		0.0f, 0.0f, 1.0f, 0.0f,
+	// 		cursor.x+0.5f, cursor.y+0.5f, 0.0f, 1.0f
+	// 	)
+	// );
 
 
 	glUseProgram(0);
@@ -446,13 +440,39 @@ void Game::draw(glm::uvec2 drawable_size) {
 }
 
 
-void Game::merge_row(std::vector<Mesh const *> board_meshes, int row){
+void Game::merge_row_right(int row){
 	std::cout<<"merging row "<<row<<"\n";
+	for (uint32_t x = 0; x < board_size.x; ++x) {
+			board_meshes[row*board_size.x+x] = &doll_mesh;
+	}
 }
 
-void Game::merge_col(std::vector<Mesh const *> board_meshes, int col){
+void Game::merge_col_down(int col){
 	std::cout<<"merging col "<< col<<"\n";
+	for (uint32_t y = 0; y < board_size.y; ++y) {
+		std::cout<<"index is: " <<y*col+col<<"\n";
+		board_meshes[y*col+y] = &cube_mesh;
+	}
 
+}
+
+void Game::reset(){
+
+	std::cout<<"reset called"<<"\n";
+	board_meshes.clear();
+	board_rotations.clear();
+	//----------------
+	//set up game board with meshes and rolls:
+
+	std::mt19937 mt(0xbead1234);
+
+	// std::vector< Mesh const * > meshes{ &doll_mesh, &egg_mesh, &cube_mesh, &darkpiece_mesh, &lightpiece_mesh};
+	std::vector< Mesh const * > meshes{&darkpiece_mesh, &lightpiece_mesh};
+
+	for (uint32_t i = 0; i < board_size.x * board_size.y; ++i) {
+		board_meshes.emplace_back(meshes[mt()%meshes.size()]);
+		board_rotations.emplace_back(glm::quat());
+	}
 }
 
 
