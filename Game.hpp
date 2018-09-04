@@ -28,7 +28,11 @@ struct Game {
 	//draw is called after update:
 	void draw(glm::uvec2 drawable_size);
 
+	bool is_finished();
+
 	void reset();
+
+	void reset_newboard();
 
 	//------- opengl resources -------
 
@@ -68,13 +72,37 @@ struct Game {
 	Mesh darkpiece_mesh;
 	Mesh lightpiece_mesh;
 	Mesh selectedtile_mesh;
+	Mesh gameovertext_mesh;
+	Mesh starttext_mesh;
+	Mesh currentscoretext_mesh;
+	Mesh bestscoretext_mesh;
+
+	Mesh num0_mesh;
+	Mesh num1_mesh;
+	Mesh num2_mesh;
+	Mesh num3_mesh;
+	Mesh num4_mesh;
+	Mesh num5_mesh;
+	Mesh num6_mesh;
+	Mesh num7_mesh;
+	Mesh num8_mesh;
+	Mesh num9_mesh;
 
 	void merge_row_right(int row);
 	void merge_row_left(int row);
 	void merge_col_down(int col);
 	void merge_col_up(int col);
 
+	Mesh get_first_digit(uint32_t score);
+	Mesh get_second_digit(uint32_t score);
+
 	bool vertical_direction;
+	bool game_over;
+	bool show_start_screen;
+
+	uint32_t lowscore;
+	uint32_t currentscore;
+	uint32_t seed;
 
 	GLuint meshes_for_simple_shading_vao = -1U; //vertex array object that describes how to connect the meshes_vbo to the simple_shading_program
 

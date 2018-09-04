@@ -185,6 +185,21 @@ Game::Game() {
 		darkpiece_mesh = lookup("DarkPiece");
 		lightpiece_mesh = lookup("LightPiece");
 		selectedtile_mesh = lookup("SelectedTile");
+		gameovertext_mesh = lookup("GameOverText");
+		starttext_mesh = lookup("StartText");
+		currentscoretext_mesh = lookup("CurrentScoreText");
+		bestscoretext_mesh = lookup("BestScoreText");
+
+		num0_mesh = lookup("NUM0");
+		num1_mesh = lookup("NUM1");
+		num2_mesh = lookup("NUM2");
+		num3_mesh = lookup("NUM3");
+		num4_mesh = lookup("NUM4");
+		num5_mesh = lookup("NUM5");
+		num6_mesh = lookup("NUM6");
+		num7_mesh = lookup("NUM7");
+		num8_mesh = lookup("NUM8");
+		num9_mesh = lookup("NUM9");
 	}
 
 	{ //create vertex array object to hold the map from the mesh vertex buffer to shader program attributes:
@@ -208,6 +223,9 @@ Game::Game() {
 	GL_ERRORS();
 	board_meshes.reserve(board_size.x * board_size.y);
 	board_rotations.reserve(board_size.x * board_size.y);
+	seed = 0xbead1234;
+	lowscore = 0;
+	show_start_screen = true;
 	reset();
 }
 
@@ -229,19 +247,45 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 	if (evt.type == SDL_KEYDOWN && evt.key.repeat) {
 		return false;
 	}
+
+	if (show_start_screen) {
+		if (evt.type == SDL_KEYDOWN || evt.type == SDL_KEYUP) {
+			if (evt.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+				show_start_screen = false;
+				return true;
+			}
+		}
+		return false;
+	}
 	//handle tracking the state of WSAD for roll control:
 	if (evt.type == SDL_KEYDOWN || evt.type == SDL_KEYUP) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_W) {
 			controls.roll_up = (evt.type == SDL_KEYDOWN);
+			if (evt.type == SDL_KEYDOWN && vertical_direction) {
+				merge_col_up(cursor.x);
+				currentscore++;
+			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_S) {
 			controls.roll_down = (evt.type == SDL_KEYDOWN);
+			if(evt.type == SDL_KEYDOWN && vertical_direction) {
+				merge_col_down(cursor.x);
+				currentscore++;
+			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_A) {
 			controls.roll_left = (evt.type == SDL_KEYDOWN);
+			if(evt.type == SDL_KEYDOWN && !vertical_direction) {
+				merge_row_left(cursor.y);
+				currentscore++;
+			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_D) {
 			controls.roll_right = (evt.type == SDL_KEYDOWN);
+			if(evt.type == SDL_KEYDOWN && !vertical_direction) {
+				merge_row_right(cursor.y);
+				currentscore++;
+			}
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_R) {
 			if (evt.type == SDL_KEYDOWN){
@@ -281,14 +325,7 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 
 	if (evt.type == SDL_KEYDOWN && evt.key.repeat == 0) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_SPACE) {
-			if (vertical_direction) {
-				std::cout << "vertical direction is selected" << "\n";
-				merge_col_up(cursor.x);
-			}
-			else {
-				std::cout << "horizontal direction is selected" << "\n";
-				merge_row_right(cursor.y);
-			}
+			reset_newboard();
 			return true;
 		}
 	}
@@ -297,8 +334,30 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 
 void Game::update(float elapsed) {
 	//if the roll keys are pressed, rotate everything on the same row or column as the cursor:
+	game_over = is_finished();
+	if (game_over) {
+		if (currentscore!=0) {
+			if (lowscore == 0 || currentscore < lowscore) {
+				lowscore = currentscore;
+			}
+		}
+	}
+
 	glm::quat dr = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 	float amt = elapsed * 1.0f;
+	//
+	// if (!vertical_direction) {
+	// 	dr = glm::angleAxis(amt, glm::vec3(1.0f, 0.0f, 0.0f)) * dr;
+	// 	if (dr != glm::quat()) {
+	// 		for (uint32_t x = 0; x < board_size.x; ++x) {
+	// 			uint32_t index = cursor.x*board_size.y + x;
+	// 			std::cout<<"index: "<<index<<"\n";
+	// 			glm::quat &r = board_rotations[index];
+	// 			r = glm::normalize(dr * r);
+	// 		}
+	// 	}
+	// }
+
 	if (controls.roll_left) {
 		dr = glm::angleAxis(amt, glm::vec3(0.0f, 1.0f, 0.0f)) * dr;
 	}
@@ -389,51 +448,126 @@ void Game::draw(glm::uvec2 drawable_size) {
 				)
 			);
 			if (vertical_direction) {
-				draw_mesh(selectedtile_mesh,
-					glm::mat4(
-						1.0f, 0.0f, 0.0f, 0.0f,
-						0.0f, 1.0f, 0.0f, 0.0f,
-						0.0f, 0.0f, 1.0f, 0.0f,
-						cursor.x+0.5f, y+0.5f, 0.0f, 1.0f
-					)
-				);
+				if(!game_over && !show_start_screen) {
+					draw_mesh(selectedtile_mesh,
+						glm::mat4(
+							1.0f, 0.0f, 0.0f, 0.0f,
+							0.0f, 1.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							cursor.x+0.5f, y+0.5f, 0.0f, 1.0f
+						)
+					);
+				}
 			}
 			else {
-				draw_mesh(selectedtile_mesh,
-					glm::mat4(
-						1.0f, 0.0f, 0.0f, 0.0f,
-						0.0f, 1.0f, 0.0f, 0.0f,
-						0.0f, 0.0f, 1.0f, 0.0f,
-						x+0.5f, cursor.y+0.5f, 0.0f, 1.0f
-					)
-				);
+				if (!game_over && !show_start_screen) {
+					draw_mesh(selectedtile_mesh,
+						glm::mat4(
+							1.0f, 0.0f, 0.0f, 0.0f,
+							0.0f, 1.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							x+0.5f, cursor.y+0.5f, 0.0f, 1.0f
+						)
+					);
+				}
+
 			}
 
 			const Mesh* gamepiece_to_draw = board_meshes[y*board_size.x+x];
 			if(gamepiece_to_draw) {
 				draw_mesh(*gamepiece_to_draw,
+						glm::mat4(
+							1.0f, 0.0f, 0.0f, 0.0f,
+							0.0f, 1.0f, 0.0f, 0.0f,
+							0.0f, 0.0f, 1.0f, 0.0f,
+							x+0.5f, y+0.5f, 0.0f, 1.0f
+						)
+						* glm::mat4_cast(board_rotations[y*board_size.x+x])
+					);
+				}
+			}
+		}
+
+		if (show_start_screen) {
+			draw_mesh(starttext_mesh,
 					glm::mat4(
 						1.0f, 0.0f, 0.0f, 0.0f,
 						0.0f, 1.0f, 0.0f, 0.0f,
 						0.0f, 0.0f, 1.0f, 0.0f,
-						x+0.5f, y+0.5f, 0.0f, 1.0f
+						float(board_size.x-1)/2 - 0.5f, float(board_size.y-1)/2 + 0.5f, 1.0f, 1.0f
 					)
-					* glm::mat4_cast(board_rotations[y*board_size.x+x])
 				);
-			}
-
-
 		}
-	}
-	// draw_mesh(cursor_mesh,
-	// 	glm::mat4(
-	// 		1.0f, 0.0f, 0.0f, 0.0f,
-	// 		0.0f, 1.0f, 0.0f, 0.0f,
-	// 		0.0f, 0.0f, 1.0f, 0.0f,
-	// 		cursor.x+0.5f, cursor.y+0.5f, 0.0f, 1.0f
-	// 	)
-	// );
 
+
+
+		if (game_over) {
+			draw_mesh(gameovertext_mesh,
+				glm::mat4(
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f, 0.0f,
+					float(board_size.x-1)/2, float(board_size.y-1)/2, 0.1f, 1.0f
+				)
+			);
+		}
+
+		Mesh currscore_firstdigit_mesh = get_first_digit(currentscore);
+		Mesh currscore_seconddigit_mesh = get_second_digit(currentscore);
+		Mesh lowscore_firstdigit_mesh = get_first_digit(lowscore);
+		Mesh lowscore_seconddigit_mesh = get_second_digit(lowscore);
+
+		draw_mesh(currentscoretext_mesh,
+			glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				float(board_size.x) + 0.1f, float(board_size.y-0.7f), 0.0f, 1.0f
+			)
+		);
+
+		draw_mesh(currscore_firstdigit_mesh,
+			glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				float(board_size.x) + 0.1f, float(board_size.y-1), 0.0f, 1.0f
+			)
+		);
+		draw_mesh(currscore_seconddigit_mesh,
+			glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				float(board_size.x) + 0.3f, float(board_size.y-1), 0.0f, 1.0f
+			)
+		);
+
+		draw_mesh(bestscoretext_mesh,
+			glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				float(board_size.x) + 0.1f, float(board_size.y-1.7), 0.0f, 1.0f
+			)
+		);
+
+		draw_mesh(lowscore_firstdigit_mesh,
+			glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				float(board_size.x) + 0.1f, float(board_size.y-2), 0.0f, 1.0f
+			)
+		);
+		draw_mesh(lowscore_seconddigit_mesh,
+			glm::mat4(
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 0.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				float(board_size.x) + 0.3f, float(board_size.y-2), 0.0f, 1.0f
+			)
+		);
 
 	glUseProgram(0);
 
@@ -629,15 +763,30 @@ void Game::merge_col_up(int col){
 		}
 	}
 }
-void Game::reset(){
 
-	std::cout<<"reset called"<<"\n";
+void Game::reset_newboard(){
+	lowscore = 0;
+	currentscore = 0;
+	game_over = false;
+
+	board_meshes.clear();
+	board_rotations.clear();
+	//get seed based on time for a new board
+	//THIS LINE IS TAKEN FROM THE CPLUSPLUS REFERENCE WEBSITE: http://www.cplusplus.com/reference/random/mersenne_twister_engine/mersenne_twister_engine/
+	seed = std::chrono::system_clock::now().time_since_epoch().count();
+	reset();
+}
+
+void Game::reset(){
+	currentscore = 0;
+	game_over = false;
+
 	board_meshes.clear();
 	board_rotations.clear();
 	//----------------
 	//set up game board with meshes and rolls:
 
-	std::mt19937 mt(0xbead1234);
+	std::mt19937 mt(seed);
 
 	// std::vector< Mesh const * > meshes{ &doll_mesh, &egg_mesh, &cube_mesh, &darkpiece_mesh, &lightpiece_mesh};
 	std::vector< Mesh const * > meshes{&darkpiece_mesh, &lightpiece_mesh};
@@ -645,6 +794,60 @@ void Game::reset(){
 	for (uint32_t i = 0; i < board_size.x * board_size.y; ++i) {
 		board_meshes.emplace_back(meshes[mt()%meshes.size()]);
 		board_rotations.emplace_back(glm::quat());
+	}
+}
+
+bool Game::is_finished(){
+	std::vector<Mesh const *> remaining_meshes;
+	for (uint32_t i = 0; i < board_size.x * board_size.y; ++i) {
+		if (board_meshes[i]) {
+			remaining_meshes.push_back(board_meshes[i]);
+		}
+	}
+	if (remaining_meshes.size() < 2){
+		return true;
+	} else if (remaining_meshes.size() == 2) {
+		if(remaining_meshes[0] != remaining_meshes[1]) {
+			return true;
+		}
+	}
+	return false;
+}
+
+Game::Mesh Game::get_first_digit(uint32_t score) {
+	uint32_t first_digit = score/10;
+	if (first_digit > 9) {
+		first_digit = 9;
+	}
+	switch(first_digit)
+	{
+		case 1: return num1_mesh;
+		case 2: return num2_mesh;
+		case 3: return num3_mesh;
+		case 4: return num4_mesh;
+		case 5: return num5_mesh;
+		case 6: return num6_mesh;
+		case 7: return num7_mesh;
+		case 8: return num8_mesh;
+		case 9: return num9_mesh;
+		default: return num0_mesh;
+	}
+}
+
+Game::Mesh Game::get_second_digit(uint32_t score) {
+	uint32_t second_digit = score%10;
+	switch(second_digit)
+	{
+		case 1: return num1_mesh;
+		case 2: return num2_mesh;
+		case 3: return num3_mesh;
+		case 4: return num4_mesh;
+		case 5: return num5_mesh;
+		case 6: return num6_mesh;
+		case 7: return num7_mesh;
+		case 8: return num8_mesh;
+		case 9: return num9_mesh;
+		default: return num0_mesh;
 	}
 }
 

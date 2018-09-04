@@ -1,11 +1,16 @@
 # Game Information
 (Note: fill in this portion with information about your game.)
 
-Title: (TODO: your game's title)
+Title: Slidey Ball
 
-Author: (TODO: your name)
+Author: Anubhav Jaiswal
 
-Design Document: [TODO: name of design document](TODO: link to design document)
+Design Document: This game was inspired by the game in the following document. However certain changes were made to the specified game.
+1) Instead of just merging adjacent balls in a powerful slide, balls merge like they do in 2048 --> adjacent ones matching the edge merge together.
+2) Instead of having a separate slide and powerful slide, there is a single merge. A slide is automatically performed if balls cannot be combined. Otherwise a 'powerful slide' is performed, followed by a slide. I wanted to match the dynamics of 2048, and this makes the gameplay more enjoyable.
+3) The player has a choice of replaying a level ('r') or trying a new level ('space'). If the player replays a level, the best score is retained. If the player starts a new random level, the best score is reset.
+4) A player can highlight a row or column using the arrow keys. If a column is highlighted, then only up and down merges can be performed. If a row is selected, only left and right merges can be performed. These merges are controlled via 'WASD'
+[TODO: na](TODO: link to design document)
 
 Screen Shot:
 
