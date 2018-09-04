@@ -21,9 +21,13 @@ Difficulties Encountered: The main difficulties with this game was learning Open
 Good Code: I felt the code that involved merging was done fairly well. The way the code is written may not be the best, though the logic is pretty good. I had first written slides/powerful slides as specified by the original game document, though they weren't as intuitive to use. Thus I used an iterative procedure by writing different merge functions and had friends play the game on each in order to come up with what we thought was the most intuitive. The code in the 'merge_row/col_left/right/up/down' methods illustrates this iterative process, and while not as concise as possible, it is super easy to debug.
 
 # Controls
-Use the arrow keys to select a row or column in which you want to merge balls (the selected row/col will be highlighted in green).
-Once a row/column is selected use 'a'/'d' to merge balls left or right in a row and 'w'/'s' to merge balls up or down in a column
-Merging occurs similar to
+-Use the arrow keys to select a row or column in which you want to merge balls (the selected row/col will be highlighted in green).
+-Once a row/column is selected use 'a'/'d' to merge balls left or right in a row and 'w'/'s' to merge balls up or down in a column
+-Merging occurs similar to 2048. For example if a right merge occurs, all elements matching and adjacent to the element at the right edge of that row will be removed. After that all elements will be shifted to the right to fill up the space. If nothing can be merged, then all elements shift right to fill any gaps in that row. This process is the same for all directions of merges.
+-The game ends when no balls can be merged with each other.
+-The goal of the game is to make the fewest merges as possible.
+-The best score remains for a level, and you can retry a level by pressing 'r'
+-You can select a new level to play by pressing 'space', though this will reset your best score
 
 # Using This Base Code
 
