@@ -72,6 +72,7 @@ struct Game {
 	void merge_row_right(int row);
 	void merge_row_left(int row);
 	void merge_col_down(int col);
+	void merge_col_up(int col);
 
 	bool vertical_direction;
 

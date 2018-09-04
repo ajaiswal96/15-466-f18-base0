@@ -283,7 +283,7 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 		if (evt.key.keysym.scancode == SDL_SCANCODE_SPACE) {
 			if (vertical_direction) {
 				std::cout << "vertical direction is selected" << "\n";
-				merge_col_down(cursor.x);
+				merge_col_up(cursor.x);
 			}
 			else {
 				std::cout << "horizontal direction is selected" << "\n";
@@ -543,7 +543,6 @@ void Game::merge_col_down(int col){
 	for (uint32_t y = 1; y < board_size.y; ++y) {
 		uint32_t curr_index = y*board_size.x+col;
 		const Mesh* curr_mesh = board_meshes[curr_index];
-		std::cout<<"first index: "<<first_index<<"first mesh: "<<first_mesh<<"curr index: "<<curr_index<<"curr_mesh: "<<curr_mesh<<"\n";
 		if (first_mesh == curr_mesh) {
 			board_meshes[first_index] = nullptr;
 			board_meshes[curr_index] = nullptr;
@@ -584,6 +583,52 @@ void Game::merge_col_down(int col){
 	}
 }
 
+void Game::merge_col_up(int col){
+	bool element_deleted = false;
+	uint32_t first_index = (board_size.y -1)*board_size.x + col;
+	const Mesh* first_mesh = board_meshes[first_index];
+	for (int y = board_size.y-2; y >=0; --y) {
+		uint32_t curr_index = y*board_size.x+col;
+		const Mesh* curr_mesh = board_meshes[curr_index];
+		if (first_mesh == curr_mesh) {
+			board_meshes[first_index] = nullptr;
+			board_meshes[curr_index] = nullptr;
+			element_deleted = true;
+		} else {
+			break;
+		}
+	}
+	if (element_deleted){
+		uint32_t num_deleted = 0;
+		for (int y = board_size.y-1; y>=0; --y){
+			uint32_t current_index = y*board_size.x+col;
+			if (!board_meshes[current_index]){
+				num_deleted ++;
+			}
+			else {
+				board_meshes[current_index + board_size.x*num_deleted] = board_meshes[current_index];
+				board_meshes[current_index] = nullptr;
+			}
+		}
+	}
+
+	std::queue<const Mesh*> non_null_element_queue;
+	for (int y = board_size.y-1; y>=0; --y){
+		uint32_t current_index = y*board_size.x+col;
+		if (board_meshes[current_index]) {
+			non_null_element_queue.push(board_meshes[current_index]);
+		}
+	}
+	for (int y = board_size.y-1; y>=0; --y){
+		uint32_t current_index = y*board_size.x+col;
+		if(!non_null_element_queue.empty()){
+			board_meshes[current_index] = non_null_element_queue.front();
+			non_null_element_queue.pop();
+		} else {
+			board_meshes[current_index] = nullptr;
+		}
+	}
+}
 void Game::reset(){
 
 	std::cout<<"reset called"<<"\n";
