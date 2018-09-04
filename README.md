@@ -1,13 +1,12 @@
 # Game Information
-(Note: fill in this portion with information about your game.)
-
 Title: Slidey Ball
 
 Author: Anubhav Jaiswal
 
-Design Document: This game was inspired by the game in the following document. However certain changes were made to the specified game.
+Design Document: This game was inspired by the game in the following document. However certain improvements were made to the specified game.
 1) Instead of just merging adjacent balls in a powerful slide, balls merge like they do in 2048 --> adjacent ones matching the edge merge together.
 2) Instead of having a separate slide and powerful slide, there is a single merge. A slide is automatically performed if balls cannot be combined. Otherwise a 'powerful slide' is performed, followed by a slide. I wanted to match the dynamics of 2048, and this makes the gameplay more enjoyable.
+3) Instead of merging arbitrary adjacent balls, only those that are adjacent to and match the edge to which they are being merged get merged.
 3) The player has a choice of replaying a level ('r') or trying a new level ('space'). If the player replays a level, the best score is retained. If the player starts a new random level, the best score is reset.
 4) A player can highlight a row or column using the arrow keys. If a column is highlighted, then only up and down merges can be performed. If a row is selected, only left and right merges can be performed. These merges are controlled via 'WASD'
 
@@ -15,15 +14,16 @@ Here is the original design doc which inspired this game:[Sliding Ball](http://g
 
 Screen Shot:
 
-![Screen Shot](screenshot.png)
+![Screen Shot](slideyball_screenshot.png)
 
-Difficulties Encountered:
+Difficulties Encountered: The main difficulties with this game was learning OpenGL, Blender, and touching up on C++. It has been years since I used both C++ and OpenGL, so I spent a considerable amount of time going through the code and reading OpenGL documentation / watching videos about it's pipeline and what happens at each stage. Learning Blender wasn't too bad though it was annoying to create meshes for all the text needed for scores and menus. The other difficulty I encountered (mentioned in the good code section) was trying to make moves in the game more intuitive. In hindsight, I should have just stuck to the design doc for the sake of time.
 
-TODO: write several sentences about any difficulties you may have encountered in creating the game.
+Good Code: I felt the code that involved merging was done fairly well. The way the code is written may not be the best, though the logic is pretty good. I had first written slides/powerful slides as specified by the original game document, though they weren't as intuitive to use. Thus I used an iterative procedure by writing different merge functions and had friends play the game on each in order to come up with what we thought was the most intuitive. The code in the 'merge_row/col_left/right/up/down' methods illustrates this iterative process, and while not as concise as possible, it is super easy to debug.
 
-Good Code:
-
-TODO: write a sentence or two about any code you think you did particularly well.
+# Controls
+Use the arrow keys to select a row or column in which you want to merge balls (the selected row/col will be highlighted in green).
+Once a row/column is selected use 'a'/'d' to merge balls left or right in a row and 'w'/'s' to merge balls up or down in a column
+Merging occurs similar to
 
 # Using This Base Code
 
