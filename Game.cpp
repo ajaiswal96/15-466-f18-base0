@@ -11,6 +11,7 @@
 #include <map>
 #include <cstddef>
 #include <random>
+#include <queue>
 
 //helper defined later; throws if shader compilation fails:
 static GLuint compile_shader(GLenum type, std::string const &source);
@@ -244,7 +245,7 @@ bool Game::handle_event(SDL_Event const &evt, glm::uvec2 window_size) {
 			return true;
 		} else if (evt.key.keysym.scancode == SDL_SCANCODE_R) {
 			if (evt.type == SDL_KEYDOWN){
-				reset();	
+				reset();
 			}
 			return true;
 		}
@@ -440,20 +441,147 @@ void Game::draw(glm::uvec2 drawable_size) {
 }
 
 
+void Game::merge_row_left(int row){
+	bool element_deleted = false;
+	uint32_t first_index = row*board_size.y;
+	const Mesh* first_mesh = board_meshes[first_index];
+	for (uint32_t x = 1; x < board_size.x; ++x) {
+		uint32_t curr_index = row*board_size.y + x;
+		const Mesh* curr_mesh = board_meshes[curr_index];
+		if (first_mesh == curr_mesh) {
+				board_meshes[curr_index] = nullptr;
+				board_meshes[first_index] = nullptr;
+				element_deleted = true;
+			} else {
+				break;
+			}
+	}
+	if (element_deleted) {
+		uint32_t num_deleted = 0;
+		for (uint32_t x = 0; x < board_size.x; ++x) {
+			uint32_t current_index = row*board_size.y + x;
+			if (!board_meshes[current_index]){
+				num_deleted ++;
+			}
+			else {
+				board_meshes[current_index - num_deleted] = board_meshes[current_index];
+				board_meshes[current_index] = nullptr;
+			}
+
+		}
+	}
+
+	std::queue<const Mesh*> non_null_element_queue;
+	for (uint32_t x =0; x < board_size.x; ++x) {
+		uint32_t current_index = row*board_size.y + x;
+		if (board_meshes[current_index]) {
+			non_null_element_queue.push(board_meshes[current_index]);
+		}
+	}
+	for (uint32_t x =0; x < board_size.x; ++x) {
+		uint32_t current_index = row*board_size.y + x;
+		if (!non_null_element_queue.empty()) {
+			board_meshes[current_index] = non_null_element_queue.front();
+			non_null_element_queue.pop();
+		} else {
+			board_meshes[current_index] = nullptr;
+		}
+	}
+}
+
 void Game::merge_row_right(int row){
-	std::cout<<"merging row "<<row<<"\n";
-	for (uint32_t x = 0; x < board_size.x; ++x) {
-			board_meshes[row*board_size.x+x] = &doll_mesh;
+	bool element_deleted = false;
+	uint32_t first_index = row*board_size.y + (board_size.x-1);
+	const Mesh* first_mesh = board_meshes[first_index];
+	for (int x = board_size.x-2; x >=0; --x) {
+		uint32_t curr_index = row*board_size.y + x;
+		const Mesh* curr_mesh = board_meshes[curr_index];
+		if (first_mesh == curr_mesh) {
+			board_meshes[curr_index] = nullptr;
+			board_meshes[first_index] = nullptr;
+			element_deleted = true;
+		} else {
+			break;
+		}
+	}
+	if (element_deleted){
+		uint32_t num_deleted = 0;
+		for (int x = board_size.x-1; x>=0; --x) {
+			uint32_t current_index = row*board_size.y + x;
+			if (!board_meshes[current_index]){
+				num_deleted ++;
+			}
+			else {
+				board_meshes[current_index + num_deleted] = board_meshes[current_index];
+				board_meshes[current_index] = nullptr;
+			}
+		}
+	}
+
+	std::queue<const Mesh*> non_null_element_queue;
+	for (int x = board_size.x-1; x>=0; --x) {
+		uint32_t current_index = row*board_size.y + x;
+		if (board_meshes[current_index]) {
+			non_null_element_queue.push(board_meshes[current_index]);
+		}
+	}
+	for (int x = board_size.x-1; x>=0; --x) {
+		uint32_t current_index = row*board_size.y + x;
+		if (!non_null_element_queue.empty()){
+			board_meshes[current_index] = non_null_element_queue.front();
+			non_null_element_queue.pop();
+		} else {
+			board_meshes[current_index] = nullptr;
+		}
 	}
 }
 
 void Game::merge_col_down(int col){
-	std::cout<<"merging col "<< col<<"\n";
-	for (uint32_t y = 0; y < board_size.y; ++y) {
-		std::cout<<"index is: " <<y*col+col<<"\n";
-		board_meshes[y*col+y] = &cube_mesh;
+	bool element_deleted = false;
+	uint32_t first_index = col;
+	const Mesh* first_mesh = board_meshes[first_index];
+	for (uint32_t y = 1; y < board_size.y; ++y) {
+		uint32_t curr_index = y*board_size.x+col;
+		const Mesh* curr_mesh = board_meshes[curr_index];
+		std::cout<<"first index: "<<first_index<<"first mesh: "<<first_mesh<<"curr index: "<<curr_index<<"curr_mesh: "<<curr_mesh<<"\n";
+		if (first_mesh == curr_mesh) {
+			board_meshes[first_index] = nullptr;
+			board_meshes[curr_index] = nullptr;
+			element_deleted = true;
+		} else {
+			break;
+		}
+	}
+	if (element_deleted){
+		uint32_t num_deleted = 0;
+		for (uint32_t y = 0; y < board_size.y; ++y){
+			uint32_t current_index = y*board_size.x+col;
+			if (!board_meshes[current_index]){
+				num_deleted ++;
+			}
+			else {
+				board_meshes[current_index - board_size.x*num_deleted] = board_meshes[current_index];
+				board_meshes[current_index] = nullptr;
+			}
+		}
 	}
 
+	std::queue<const Mesh*> non_null_element_queue;
+	for (uint32_t y = 0; y < board_size.y; ++y){
+		uint32_t current_index = y*board_size.x+col;
+		if (board_meshes[current_index]) {
+			non_null_element_queue.push(board_meshes[current_index]);
+		}
+	}
+	for (uint32_t y = 0; y < board_size.y; ++y){
+		uint32_t current_index = y*board_size.x+col;
+		if(!non_null_element_queue.empty()){
+			board_meshes[current_index] = non_null_element_queue.front();
+			non_null_element_queue.pop();
+		} else {
+			board_meshes[current_index] = nullptr;
+		}
+	}
 }
 
 void Game::reset(){
